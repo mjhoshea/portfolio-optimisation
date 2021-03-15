@@ -3,8 +3,8 @@ import random
 import cvxopt as opt
 import matplotlib.pyplot as plt
 
-from utils.plotting_helpers import plot_return_variance_space
-from utils.common_functions import calc_r_π, calc_σ_π
+from plotting_helpers import plot_return_variance_space
+from common_functions import calc_r_π, calc_σ_π
 
 opt.solvers.options['show_progress'] = False
 
@@ -36,16 +36,14 @@ class EfficientFrontier:
             self._plot_no_lending_frontier()
 
         elif not allow_shorts and allow_lending:
-            self._plot_no_shorts_frontier()
+            self._plot_no_shorts_frontier(riskless_rate)
 
         else:
             self._plot_fully_constrained_frontier()
 
     def _plot_unconstrained_frontier(self, riskless_rate):
 
-        n_s = len(self.μ)
-
-        X = self._tangency_portfolio_weights(n_s, riskless_rate)
+        X = self._tangency_portfolio_weights(riskless_rate)
 
         R̄_π = self._calculate_portfolio_return(X)
         σ_π = self._calculate_portfolio_volatility(X)
@@ -60,17 +58,15 @@ class EfficientFrontier:
 
     def _plot_no_lending_frontier(self):
 
-        n_s = len(self.μ)
-
         r_a, r_b = (5, 2)
 
         # calculate the tangency portfolio at first rate
-        X_a = self._tangency_portfolio_weights(n_s, r_a)
+        X_a = self._tangency_portfolio_weights(r_a)
         R̄_a = self._calculate_portfolio_return(X_a)
         σ_a = self._calculate_portfolio_volatility(X_a)
 
         # calculate the tangency portfolio at the second rate
-        X_b = self._tangency_portfolio_weights(n_s, r_b)
+        X_b = self._tangency_portfolio_weights(r_b)
         R̄_b = self._calculate_portfolio_return(X_b)
         σ_b = self._calculate_portfolio_volatility(X_b)
 
@@ -102,7 +98,32 @@ class EfficientFrontier:
 
         plt.show()
 
-    def _plot_no_shorts_frontier(self):
+    def _plot_no_shorts_frontier(self, riskless_rate):
+
+        n_s = len(self.μ)
+        A = opt.matrix(np.transpose(np.array(self.μ) - riskless_rate)[None, :])
+        b = opt.matrix(np.array([1.]))
+        P = opt.matrix(self.Σ)
+        q = opt.matrix(np.zeros((n_s, 1)))
+        G = opt.matrix(-np.identity(n_s))
+        h = opt.matrix(np.zeros((n_s, 1)))
+        sol = opt.solvers.qp(P, q, G, h, A, b)
+
+        X = np.array(sol['x'])
+        X = X/sum(X)
+
+        R̄_π = self._calculate_portfolio_return(X)
+        σ_π = self._calculate_portfolio_volatility(X)
+
+        θ = (R̄_π - riskless_rate) / σ_π
+
+        x = np.arange(0, 2 * σ_π, 0.01)
+        y = [riskless_rate + θ[0] * i for i in x]
+
+        title = 'Efficient Frontier: Riskless Lending and Borrowing \n ' \
+                'With No Short Sales Allowed'
+        plot_return_variance_space(R̄_π, x, y, σ_π, title)
+
         pass
 
     def _plot_fully_constrained_frontier(self):
@@ -152,7 +173,23 @@ class EfficientFrontier:
         R̄_b = self.μ @ X_b
         return R̄_b
 
-    def _tangency_portfolio_weights(self, n_s, riskless_rate):
+    def _tangency_portfolio_weights(self, riskless_rate):
+        """ Tangency portfolio weight calculation.
+
+        Calculates the weights of the tangency portfolio given a risk free rate available
+        to an investor.
+
+        This is done by absorbing the constraint of an investor being fully invested into the objective
+        function being solved:
+
+            θ = x^Tμ - R_f / x^tΣx
+
+        And then solving the resulting system of linear equations before normalizing the weights.
+
+        :param riskless_rate:
+        :return: tangency portfolio weights
+        """
+        n_s = len(self.μ)
         B = self.μ - riskless_rate
         A = self.Σ * np.eye(n_s) + (np.ones(n_s) - np.eye(n_s)) * self.Σ
         Z = np.linalg.inv(A).dot(B)
