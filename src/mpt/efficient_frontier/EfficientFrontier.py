@@ -10,7 +10,15 @@ opt.solvers.options['show_progress'] = False
 
 
 class EfficientFrontier:
+    """ Efficient Frontier
 
+    Object for tracing out the efficient Frontier
+
+    Parameters
+    ----------
+    μ: Numpy array of expected returns on securities, dim=(N,)
+    Σ: Numpy array of covariances between securities, dim=(N,N)
+    """
     def __init__(self, μ, Σ):
         self.μ = μ
         self.Σ = Σ
@@ -20,15 +28,22 @@ class EfficientFrontier:
         self.max_σ = max(np.diagonal(Σ))
 
     @staticmethod
-    def from_sample_statistics(avg_returns, covariances):
-        return EfficientFrontier(avg_returns, covariances)
+    def from_sample_statistics(μ, Σ):
+        return EfficientFrontier(μ, Σ)
 
     @staticmethod
     def from_raw_returns(returns):
+        # TODO
         pass
 
     def plot_frontier(self, allow_shorts=True, allow_lending=True, riskless_rate=5):
+        """ Plot out the efficient frontier for a specific configuration.
 
+        :param allow_shorts: Are short sales available to the investor.
+        :param allow_lending: Can the investor lend/borrow at the risk-free rate.
+        :param riskless_rate: The rate at with the investor can lend/borrow at.
+        :return:
+        """
         if allow_shorts and allow_lending:
             self._plot_unconstrained_frontier(riskless_rate)
 
@@ -88,7 +103,7 @@ class EfficientFrontier:
             r_π.append(calc_r_π(R̄_a, x_a, R̄_b, x_b))
             σ_π.append(calc_σ_π(σ_a, x_a, σ_b, x_b, σ_ab))
 
-        title = 'Efficient Frontier: Short Selling and Riskless \n Lending/Borrowing Not Allowed'
+        title = 'Efficient Frontier: Short Sales Allowed: No Riskless \n Lending/Borrowing'
 
         plt.title(title)
         plt.plot(σ_π, r_π)
@@ -146,7 +161,7 @@ class EfficientFrontier:
         max_μ = max(self.μ)
         R_π = []
         σ_π = []
-        for r in np.arange(min_μ, max_μ, 0.001):
+        for r in np.linspace(min_μ, max_μ, num=100):
             b = opt.matrix(np.array([r, 1]))
             sol = opt.solvers.qp(P, q, G, h, A, b)
             weights = np.array(sol['x'])
@@ -195,9 +210,3 @@ class EfficientFrontier:
         Z = np.linalg.inv(A).dot(B)
         X = Z / sum(Z)
         return X
-
-    def _plot_no_short_frontier(self):
-        pass
-
-    def _plot_constrained_frontier(self):
-        pass

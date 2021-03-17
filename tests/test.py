@@ -18,7 +18,7 @@ class EfficientFrontierTests(unittest.TestCase):
         ef = EfficientFrontier.from_sample_statistics(R, cov)
 
         risk_free_rate = 5
-        x = ef._tangency_portfolio_weights(len(R), risk_free_rate)
+        x = ef._tangency_portfolio_weights(risk_free_rate)
 
         assert np.all(np.isclose(x, expected_weights))
 
@@ -28,7 +28,7 @@ class EfficientFrontierTests(unittest.TestCase):
         risk_free_rate = 2
 
         ef = EfficientFrontier.from_sample_statistics(R, cov)
-        x = ef._tangency_portfolio_weights(len(R), risk_free_rate)
+        x = ef._tangency_portfolio_weights(risk_free_rate)
 
         assert np.all(np.isclose(x, expected_weights))
 
