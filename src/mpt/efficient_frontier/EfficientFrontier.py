@@ -36,27 +36,27 @@ class EfficientFrontier:
         # TODO
         pass
 
-    def plot_frontier(self, allow_shorts=True, allow_lending=True, riskless_rate=5):
+    def plot_frontier(self, allow_shorts=True, allow_lending=True, riskless_rate=5, save_name=None):
         """ Plot out the efficient frontier for a specific configuration.
 
         :param allow_shorts: Are short sales available to the investor.
         :param allow_lending: Can the investor lend/borrow at the risk-free rate.
         :param riskless_rate: The rate at with the investor can lend/borrow at.
-        :return:
+        :param save_name:
         """
         if allow_shorts and allow_lending:
-            self._plot_unconstrained_frontier(riskless_rate)
+            self._plot_unconstrained_frontier(riskless_rate, save_name)
 
         elif allow_shorts and not allow_lending:
-            self._plot_no_lending_frontier()
+            self._plot_no_lending_frontier(save_name)
 
         elif not allow_shorts and allow_lending:
-            self._plot_no_shorts_frontier(riskless_rate)
+            self._plot_no_shorts_frontier(riskless_rate, save_name)
 
         else:
-            self._plot_fully_constrained_frontier()
+            self._plot_fully_constrained_frontier(save_name)
 
-    def _plot_unconstrained_frontier(self, riskless_rate):
+    def _plot_unconstrained_frontier(self, riskless_rate, save_name):
 
         X = self._tangency_portfolio_weights(riskless_rate)
 
@@ -69,9 +69,9 @@ class EfficientFrontier:
         y = [riskless_rate + θ * i for i in x]
 
         title = 'Efficient Frontier: Short Selling and Riskless \n Lending/Borrowing Allowed'
-        plot_return_variance_space(R̄_π, x, y, σ_π, title)
+        plot_return_variance_space(R̄_π, x, y, σ_π, title, save_name)
 
-    def _plot_no_lending_frontier(self):
+    def _plot_no_lending_frontier(self, save_name):
 
         r_a, r_b = (5, 2)
 
@@ -105,15 +105,17 @@ class EfficientFrontier:
 
         title = 'Efficient Frontier: Short Sales Allowed: No Riskless \n Lending/Borrowing'
 
-        plt.title(title)
-        plt.plot(σ_π, r_π)
+        # plt.title(title, size=20)
+        plt.plot(σ_π, r_π, linewidth=1.5)
         #   plt.scatter(σ_π, R̄_π, marker='x', color='red', s=100)
-        plt.ylabel('$r_p$', size=14)
-        plt.xlabel('$\sigma_p$', size=14)
+        plt.ylabel('$r_\pi$', size=16)
+        plt.xlabel('$\sigma_\pi$', size=16)
+        if save_name:
+            plt.savefig(save_name)
 
         plt.show()
 
-    def _plot_no_shorts_frontier(self, riskless_rate):
+    def _plot_no_shorts_frontier(self, riskless_rate, save_name):
 
         n_s = len(self.μ)
         A = opt.matrix(np.transpose(np.array(self.μ) - riskless_rate)[None, :])
@@ -137,11 +139,11 @@ class EfficientFrontier:
 
         title = 'Efficient Frontier: Riskless Lending and Borrowing \n ' \
                 'With No Short Sales Allowed'
-        plot_return_variance_space(R̄_π, x, y, σ_π, title)
+        plot_return_variance_space(R̄_π, x, y, σ_π, title, save_name)
 
         pass
 
-    def _plot_fully_constrained_frontier(self):
+    def _plot_fully_constrained_frontier(self, save_name):
         n = len(self.μ)
 
         # minimize
@@ -172,12 +174,14 @@ class EfficientFrontier:
 
         title = 'Efficient Frontier: No Short Selling or Riskless \n Lending/Borrowing Not Allowed'
 
-        plt.title(title, size=18)
-        plt.plot(np.sqrt(σ_π), R_π)
-        plt.scatter(np.sqrt(σs), self.μ, marker='x', color='red', s=100)
+        # plt.title(title, size=20)
+        plt.plot(np.sqrt(σ_π), R_π, linewidth=1.5)
+        plt.scatter(np.sqrt(σs), self.μ, marker='x', color='red', s=100, linewidth=1.5)
 
-        plt.ylabel('$r_p$', size=14)
-        plt.xlabel('$\sigma_p$', size=14)
+        plt.ylabel('$r_\pi$', size=16)
+        plt.xlabel('$\sigma_\pi$', size=16)
+        if save_name:
+            plt.savefig(save_name)
         plt.show()
 
     def _calculate_portfolio_volatility(self, X_b):
