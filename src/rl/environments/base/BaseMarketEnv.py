@@ -7,7 +7,7 @@ class BaseMarketEnv(ABC):
         pass
 
     @abstractmethod
-    def step(self, n_steps):
+    def step(self, n_steps, n=1):
         pass
 
     @abstractmethod

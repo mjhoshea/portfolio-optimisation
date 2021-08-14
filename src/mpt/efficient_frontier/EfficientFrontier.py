@@ -19,6 +19,7 @@ class EfficientFrontier:
     μ: Numpy array of expected returns on securities, dim=(N,)
     Σ: Numpy array of covariances between securities, dim=(N,N)
     """
+
     def __init__(self, μ, Σ):
         self.μ = μ
         self.Σ = Σ
@@ -36,13 +37,17 @@ class EfficientFrontier:
         # TODO
         pass
 
-    def plot_frontier(self, allow_shorts=True, allow_lending=True, riskless_rate=5, save_name=None):
+    def plot_frontier(self, allow_shorts=True, allow_lending=True, riskless_rate=5, save_name=None, stds=None,
+                      returns=None):
         """ Plot out the efficient frontier for a specific configuration.
+
 
         :param allow_shorts: Are short sales available to the investor.
         :param allow_lending: Can the investor lend/borrow at the risk-free rate.
         :param riskless_rate: The rate at with the investor can lend/borrow at.
         :param save_name:
+        :param returns: additional returns to plot
+        :param stds: additional stds to plot
         """
         if allow_shorts and allow_lending:
             self._plot_unconstrained_frontier(riskless_rate, save_name)
@@ -54,7 +59,9 @@ class EfficientFrontier:
             self._plot_no_shorts_frontier(riskless_rate, save_name)
 
         else:
-            self._plot_fully_constrained_frontier(save_name)
+            sr = self._plot_fully_constrained_frontier(save_name, stds=stds, returns=returns)
+
+            return sr
 
     def _plot_unconstrained_frontier(self, riskless_rate, save_name):
 
@@ -103,11 +110,8 @@ class EfficientFrontier:
             r_π.append(calc_r_π(R̄_a, x_a, R̄_b, x_b))
             σ_π.append(calc_σ_π(σ_a, x_a, σ_b, x_b, σ_ab))
 
-        title = 'Efficient Frontier: Short Sales Allowed: No Riskless \n Lending/Borrowing'
-
-        # plt.title(title, size=20)
+        plt.figure(figsize=(8, 6), dpi=100)
         plt.plot(σ_π, r_π, linewidth=1.5)
-        #   plt.scatter(σ_π, R̄_π, marker='x', color='red', s=100)
         plt.ylabel('$r_\pi$', size=16)
         plt.xlabel('$\sigma_\pi$', size=16)
         if save_name:
@@ -127,7 +131,7 @@ class EfficientFrontier:
         sol = opt.solvers.qp(P, q, G, h, A, b)
 
         X = np.array(sol['x'])
-        X = X/sum(X)
+        X = X / sum(X)
 
         R̄_π = self._calculate_portfolio_return(X)
         σ_π = self._calculate_portfolio_volatility(X)
@@ -139,11 +143,9 @@ class EfficientFrontier:
 
         title = 'Efficient Frontier: Riskless Lending and Borrowing \n ' \
                 'With No Short Sales Allowed'
-        plot_return_variance_space(R̄_π, x, y, σ_π, title, save_name)
+        plot_return_variance_space(R̄_π, x, y, σ_π, R̄_s, σ_s, title, save_name)
 
-        pass
-
-    def _plot_fully_constrained_frontier(self, save_name):
+    def _plot_fully_constrained_frontier(self, save_name, stds=None, returns=None):
         n = len(self.μ)
 
         # minimize
@@ -170,19 +172,38 @@ class EfficientFrontier:
             R_π.append(weights.T @ self.μ)
             σ_π.append((weights.T @ self.Σ @ weights)[0])
 
-        σs = np.diag(self.Σ)
+        # find sharpe portfolio
+        A = opt.matrix(np.transpose(np.array(self.μ))[None, :])
+        b = opt.matrix(np.array([1.]))
+        sol = opt.solvers.qp(P, q, G, h, A, b)
+        X = np.array(sol['x'])
+        X = X / sum(X)
+        R̄_s = self._calculate_portfolio_return(X)
+        σ_s = self._calculate_portfolio_volatility(X)
 
-        title = 'Efficient Frontier: No Short Selling or Riskless \n Lending/Borrowing Not Allowed'
+        plt.figure(figsize=(8, 6), dpi=100)
 
-        # plt.title(title, size=20)
+        # plot the efficient frontier
         plt.plot(np.sqrt(σ_π), R_π, linewidth=1.5)
-        plt.scatter(np.sqrt(σs), self.μ, marker='x', color='red', s=100, linewidth=1.5)
+
+        # plot the stocks
+        σs = np.diag(self.Σ)
+        plt.scatter(np.sqrt(σs), self.μ, marker='x', color='#f79a1e', s=100, linewidth=1.5)
+
+        # plot the Sharpe portfolio
+        plt.scatter(σ_s, R̄_s, marker='x', color='#e770a2', s=100, linewidth=1.5)
+
+        # if additional point are to be plotted plot them also
+        if stds:
+            plt.scatter(stds, returns, c='#5ac3be', alpha=0.6)
 
         plt.ylabel('$r_\pi$', size=16)
         plt.xlabel('$\sigma_\pi$', size=16)
         if save_name:
             plt.savefig(save_name)
+
         plt.show()
+        return R̄_s/σ_s
 
     def _calculate_portfolio_volatility(self, X_b):
         σ_b = np.sqrt(X_b.T @ self.Σ @ X_b)

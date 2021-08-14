@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 
 def plot_return_variance_space(R̄_π, x, y, σ_π, title, save_name):
-    # plt.title(title, size=20)
+    plt.figure(figsize=(8, 6), dpi=100)
     plt.plot(x, y, linewidth=1.5)
     plt.scatter(σ_π, R̄_π, marker='x', color='red', s=100, linewidth=1.5)
     plt.ylabel('$r_\pi$', size=16)
