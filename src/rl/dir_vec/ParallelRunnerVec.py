@@ -90,8 +90,8 @@ class ParallelRunnerVec:
             plt.fill_between(np.arange(ep_rewards.shape[1]), mean - std, mean + std, alpha=0.6)
 
         plt.legend()
-        plt.xlabel('Episode')
-        plt.ylabel('Total Returns')
+        plt.xlabel('Episode', size=12)
+        plt.ylabel('Episodic Returns', size=12)
         plt.hlines(150, 0, ep_rewards.shape[1], linestyles='dashed', colors='red')
         if file_name:
             plt.savefig('./report_images/{}'.format(file_name))

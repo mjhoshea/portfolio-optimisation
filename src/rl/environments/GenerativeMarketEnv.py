@@ -21,7 +21,7 @@ class GenerativeMarketEnv(BaseMarketEnv):
         returns = np.mean(returns, axis=0)
         return returns*weights
 
-    def plot_efficient_frontier(self, allow_shorts=False, allow_lending=False, stds=None, returns=None):
-        sr = self._ef.plot_frontier(allow_shorts=allow_shorts, allow_lending=allow_lending, stds = stds, returns = returns)
+    def plot_efficient_frontier(self, allow_shorts=False, allow_lending=False, stds=None, returns=None, save_name=None):
+        sr = self._ef.plot_frontier(allow_shorts=allow_shorts, allow_lending=allow_lending, stds = stds, returns = returns, save_name=save_name)
         return sr[0][0]
 

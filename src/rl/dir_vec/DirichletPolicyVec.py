@@ -22,7 +22,7 @@ class DirichletPolicyVec:
         self.α_decay_steps = α_decay_steps
 
         self.γ = γ
-        self.a_min = 1e-4
+        self.a_min = 1e-2
         self.a_max = 20
         self._grad_adpt_mode = grad_adpt_mode
         self._returns_adpt_mode = returns_adpt_mode
