@@ -85,7 +85,7 @@ class Harness:
             for i in range(10000):
                 X = np.eye(self._policy.n_assets)
                 w, a = self._policy.act(X)
-
+                print('hello')
                 R, rs, best_r = self._env.step(w)
                 self._update_dsr(R)
 

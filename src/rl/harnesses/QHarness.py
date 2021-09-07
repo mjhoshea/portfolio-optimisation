@@ -25,10 +25,9 @@ class QHarness:
             for t in range(n_t):
                 next_ws, actions = self.trader.act(ws)
 
-                rs = self.market.step(next_ws)
-                avg_r = ws @ rs
-
-                regret = self._regret(rs, avg_r)
+                returns, raw_returns = self.market.step(ws)
+                avg_r = np.sum(returns)
+                regret = self._regret(raw_returns, avg_r)
 
                 self.trader.step(ws, actions, self.n*[avg_r], next_ws, None)
 
@@ -43,9 +42,8 @@ class QHarness:
     def evaluate(self, n_episodes, render=False, render_sleep=0.25):
         pass
 
-    @staticmethod
-    def _regret(returns, avg_r):
-        return max(returns) - avg_r
+    def _regret(self, rs, avg_r):
+        return rs[0][self.market.best] - avg_r
 
     def plot_training_results(self, file_name=None, window=None):
         returns = np.mean(self.returns, axis=0)
@@ -64,7 +62,7 @@ class QHarness:
         plot_rewards(regrets, std, file_name)
 
 def plot_rewards(r, std=None, file_name=None):
-
+    plt.figure(figsize=(8, 6), dpi=100)
     plt.plot(r)
     plt.fill_between(range(len(r)), r + std, r - std, alpha=0.2)
     plt.title('Returns Over Time')

@@ -14,10 +14,11 @@ class TabularTrader(BaseTrader):
         self._n_viable_portfolios = len(self.actions)
         self.Q = None
         self.N = None
-        self.t = None
+        self.t = 1
         self.reset()
 
     def act(self, state):
+        self.t += 1
         ϵ = self.ϵ if not callable(self.ϵ) else self.ϵ(self.t)
         π = np.ones(self._n_viable_portfolios) * (ϵ / self._n_viable_portfolios)
         greedy_action = np.random.choice(np.flatnonzero(self.Q == self.Q.max()))

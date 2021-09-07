@@ -9,9 +9,9 @@ class HarnessVec:
         self._env = env
         self._policy = policy
         self._episode_length = episode_length
-        self._optimal_val = max(env.μ) * episode_length
+        # self._optimal_val = max(env.μ) * episode_length
 
-        self._obs_period=20
+        self._obs_period = 1
 
         # differential sharpe ratio params
         self._reward_mode = reward_mode
@@ -84,7 +84,7 @@ class HarnessVec:
             self._generate_episode()
 
             # update policy
-            rewards = self.hist['sharpe_rewards'][i] if self._reward_mode =='dsr' else self.hist['rewards'][i]
+            rewards = self.hist['sharpe_rewards'][i] if self._reward_mode == 'dsr' else self.hist['rewards'][i]
             self._policy.update(self.hist['ws'][i], rewards)
 
     def test(self, t_steps=1000):

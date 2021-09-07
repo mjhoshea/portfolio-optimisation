@@ -19,14 +19,18 @@ class MarketFactory:
         stocks = ' '.join(self.stocks)
         yahoo_df = yf.download(stocks, start=self.start_ymd, end=self.end_ymd)
         returns_df = pd.DataFrame(columns=self.stocks)
-        for stock in self.stocks:
-            returns_df[stock] = yahoo_df['Close'][stock].pct_change()[1:]
 
         if self.type == 'generative':
+            for stock in self.stocks:
+                returns_df[stock] = yahoo_df['Close'][stock].pct_change()[1:]
             μ = np.array(returns_df.mean())
             Σ = np.array(returns_df.cov())
             return GenerativeMarketEnv(μ, Σ)
         elif self.type == 'historical':
-            return HistoricalMarketEnv(returns_df)
+            for stock in self.stocks:
+                returns_df[stock] = (np.log(yahoo_df['Close'][stock]) - np.log(yahoo_df['Close'][stock].shift(1)))[1:]
+            train = returns_df.head(len(returns_df)-30)
+            test = returns_df.tail(30)
+            return HistoricalMarketEnv(train, test)
         else:
             raise ValueError("{} i not a valid market type.".format(self.type))

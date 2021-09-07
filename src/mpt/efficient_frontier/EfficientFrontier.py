@@ -50,20 +50,20 @@ class EfficientFrontier:
         :param stds: additional stds to plot
         """
         if allow_shorts and allow_lending:
-            self._plot_unconstrained_frontier(riskless_rate, save_name)
+            self._plot_unconstrained_frontier(riskless_rate, save_name,  stds=stds, returns=returns)
 
         elif allow_shorts and not allow_lending:
-            self._plot_no_lending_frontier(save_name)
+            self._plot_no_lending_frontier(save_name,  stds=stds, returns=returns)
 
         elif not allow_shorts and allow_lending:
-            self._plot_no_shorts_frontier(riskless_rate, save_name)
+            self._plot_no_shorts_frontier(riskless_rate, save_name,  stds=stds, returns=returns)
 
         else:
             sr = self._plot_fully_constrained_frontier(save_name, stds=stds, returns=returns)
 
             return sr
 
-    def _plot_unconstrained_frontier(self, riskless_rate, save_name):
+    def _plot_unconstrained_frontier(self, riskless_rate, save_name, stds, returns):
 
         X = self._tangency_portfolio_weights(riskless_rate)
 
@@ -75,10 +75,10 @@ class EfficientFrontier:
         x = np.arange(0, 2 * σ_π, 0.01)
         y = [riskless_rate + θ * i for i in x]
 
-        title = 'Efficient Frontier: Short Selling and Riskless \n Lending/Borrowing Allowed'
-        plot_return_variance_space(R̄_π, x, y, σ_π, title, save_name)
+        # if additional point are to be plotted plot them also
+        plot_return_variance_space(R̄_π, x, y, σ_π, save_name,stds=stds, returns=returns)
 
-    def _plot_no_lending_frontier(self, save_name):
+    def _plot_no_lending_frontier(self, save_name, stds, returns):
 
         r_a, r_b = (5, 2)
 
@@ -105,21 +105,26 @@ class EfficientFrontier:
         r_π = []
         σ_π = []
 
-        for x_a in np.arange(-2, 1, 0.1):
+        for x_a in np.arange(-2, 4, 0.1):
             x_b = 1 - x_a
             r_π.append(calc_r_π(R̄_a, x_a, R̄_b, x_b))
             σ_π.append(calc_σ_π(σ_a, x_a, σ_b, x_b, σ_ab))
 
         plt.figure(figsize=(8, 6), dpi=100)
-        plt.plot(σ_π, r_π, linewidth=1.5)
+        if stds:
+            plt.scatter(stds, returns, marker='x', color='#f79a1e', s=100, linewidth=1.5, label='Asset')
+        plt.plot(σ_π, r_π, linewidth=1.5, label='Efficient Frontier')
         plt.ylabel('$r_\pi$', size=16)
         plt.xlabel('$\sigma_\pi$', size=16)
+        plt.legend()
+        # if additional point are to be plotted plot them also
+
         if save_name:
             plt.savefig(save_name)
 
         plt.show()
 
-    def _plot_no_shorts_frontier(self, riskless_rate, save_name):
+    def _plot_no_shorts_frontier(self, riskless_rate, save_name, stds=None, returns=None):
 
         n_s = len(self.μ)
         A = opt.matrix(np.transpose(np.array(self.μ) - riskless_rate)[None, :])
@@ -143,7 +148,10 @@ class EfficientFrontier:
 
         title = 'Efficient Frontier: Riskless Lending and Borrowing \n ' \
                 'With No Short Sales Allowed'
-        plot_return_variance_space(R̄_π, x, y, σ_π, R̄_s, σ_s, title, save_name)
+        # if additional point are to be plotted plot them also
+
+
+        plot_return_variance_space(R̄_π, x, y, σ_π, save_name)
 
     def _plot_fully_constrained_frontier(self, save_name, stds=None, returns=None):
         n = len(self.μ)
@@ -184,15 +192,16 @@ class EfficientFrontier:
         plt.figure(figsize=(8, 6), dpi=100)
 
         # plot the efficient frontier
-        plt.plot(np.sqrt(σ_π), R_π, linewidth=1.5)
+        plt.plot(np.sqrt(σ_π), R_π, linewidth=1.5, label='Efficient Frontier')
 
         # plot the stocks
         σs = np.diag(self.Σ)
-        plt.scatter(np.sqrt(σs), self.μ, marker='x', color='#f79a1e', s=100, linewidth=1.5)
+        plt.scatter(np.sqrt(σs), self.μ, marker='x', color='#f79a1e', s=100, linewidth=1.5, label='Asset')
 
         # plot the Sharpe portfolio
         plt.scatter(σ_s, R̄_s, marker='x', color='#e770a2', s=100, linewidth=1.5)
 
+        plt.legend()
         # if additional point are to be plotted plot them also
         if stds:
             plt.scatter(stds, returns, c='#5ac3be', alpha=0.6)
