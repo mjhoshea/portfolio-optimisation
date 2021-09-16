@@ -47,3 +47,6 @@ class GaussianPolicy:
             self.θ_μ += self.α_μ * Gt * μ_grad
             self.θ_σ += self.α_μ * Gt * σ_grad
 
+    def reset(self):
+        self.θ_μ = np.ones(self.n_assets)
+        self.θ_σ = np.ones(self.n_assets)

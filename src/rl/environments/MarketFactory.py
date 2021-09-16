@@ -29,8 +29,7 @@ class MarketFactory:
         elif self.type == 'historical':
             for stock in self.stocks:
                 returns_df[stock] = (np.log(yahoo_df['Close'][stock]) - np.log(yahoo_df['Close'][stock].shift(1)))[1:]
-            train = returns_df.head(len(returns_df)-30)
-            test = returns_df.tail(30)
-            return HistoricalMarketEnv(train, test)
+
+            return HistoricalMarketEnv(len(self.stocks), returns_df, self.start_ymd, self.end_ymd)
         else:
             raise ValueError("{} i not a valid market type.".format(self.type))

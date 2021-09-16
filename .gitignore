@@ -128,3 +128,13 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+notebooks/background/report_images
+notebooks/generative_market/report_images
+notebooks/historical_market/report_images
+notebooks/modern_portfolio_theory/report_images
+notebooks/policy_based_trader/report_images
+notebooks/q_trader/report_images
+notebooks/tabular_trader/report_images
+
+*.png
