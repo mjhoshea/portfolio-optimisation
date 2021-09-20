@@ -11,7 +11,8 @@ class HarnessVec:
         self._episode_length = episode_length
         # self._optimal_val = max(env.μ) * episode_length
 
-        self._obs_period = 1
+        # set to number of days in trading month
+        self._obs_period = 21
 
         # differential sharpe ratio params
         self._reward_mode = reward_mode
